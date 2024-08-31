@@ -21,6 +21,7 @@
     "dev:debug": "DEV=true DEBUG=\"grammy*\" yarn dev"
   },
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.5.8",
     "@grammyjs/types": "^2.12.1",
     "@types/node": "^18.13.0",
     "ts-node-dev": "^2.0.0"
