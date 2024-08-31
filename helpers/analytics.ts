@@ -1,19 +1,19 @@
 import axios from "axios";
 
 async function createEvent(event: string, timestamp: string, note?: string) {
-  await axios.post(
-    process.env.ANALYTICS_ENDPOINT!,
-    {
-      event,
-      timestamp,
-      note,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.ANALYTICS_KEY}`,
-      },
-    }
-  );
+  // await axios.post(
+  //   process.env.ANALYTICS_ENDPOINT!,
+  //   {
+  //     event,
+  //     timestamp,
+  //     note,
+  //   },
+  //   {
+  //     headers: {
+  //       Authorization: `Bearer ${process.env.ANALYTICS_KEY}`,
+  //     },
+  //   }
+  // );
 }
 
 /**

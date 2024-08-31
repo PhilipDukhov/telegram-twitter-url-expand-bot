@@ -1,5 +1,5 @@
 {
-  "databaseURL": "https://pugson-3k9p63.us-east-1.xata.sh/db/linkbot",
+  "databaseURL": "https://09-wringer-perch-s-workspace-f4s3sa.ap-southeast-2.xata.sh/db/PhilLinkExpander_bot",
   "codegen": {
     "output": "helpers/xata.ts"
   }

@@ -39,19 +39,19 @@ You can also add me to your channel and I will edit messages with links to expan
                   [
                     {
                       text: "Add me to your group (if you’re an admin)",
-                      url: "tg://resolve?domain=TwitterLinkExpanderBot&startgroup&admin=delete_messages",
+                      url: "tg://resolve?domain=PhilLinkExpander_bot&startgroup&admin=delete_messages",
                     },
                   ],
                   [
                     {
                       text: "Add me to your group (if you’re a member)",
-                      url: "tg://resolve?domain=TwitterLinkExpanderBot&startgroup",
+                      url: "tg://resolve?domain=PhilLinkExpander_bot&startgroup",
                     },
                   ],
                   [
                     {
                       text: "Add me to your channel",
-                      url: "tg://resolve?domain=TwitterLinkExpanderBot&startchannel&admin=edit_messages",
+                      url: "tg://resolve?domain=PhilLinkExpander_bot&startchannel&admin=edit_messages",
                     },
                   ],
                 ],
