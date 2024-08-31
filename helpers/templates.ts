@@ -100,7 +100,7 @@ export const expandedMessageTemplate = async (
   // TODO: this function is a clusterfuck of ugly template literals. refactor in the future.
   const bothNames = firstName && lastName;
   const nameTemplate = bothNames ? `${firstName} ${lastName}` : firstName ?? lastName;
-  const usernameOrFullNameTag = username ? `@${username}` : `<a href="tg://user?id=${userId}">${nameTemplate}</a>`;
+  const usernameOrFullNameTag = username ? `${username}` : `<a href="tg://user?id=${userId}">${nameTemplate}</a>`;
   const isHackerNewsLink = link ? isHackerNews(link) : false;
   let includedLink = link;
 
