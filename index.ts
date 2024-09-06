@@ -48,5 +48,6 @@ bot.start().catch((error) => {
   notifyAdmin(error);
 });
 
-console.info("[ Bot started... ]");
-notifyAdmin(`[ Bot started... ]`);
+const message = `[ Bot started${process.env.DEV ? " in DEV mode" : ""}... ]`;
+console.info(message);
+notifyAdmin(message);
