@@ -47,11 +47,10 @@ export async function expandLink(
 ) {
   if (!ctx || !ctx.chat?.id) return;
   // Return correct link based on platform
-  let linkCleaned = link;
+  let linkWithNoTrackers = link;
   if (isTweet(link) || isInstagram(link) || isTikTok(link)) {
-    linkCleaned = link.split("?")[0];
+    linkWithNoTrackers = link.split("?")[0];
   }
-  const linkWithNoTrackers = `${linkCleaned}\n\n<a href="${handleExpandedLinkDomain(linkCleaned)}">---</a>`;
   try {
     const chatId = ctx.chat?.id;
     const topicId = ctx.msg?.message_thread_id;
@@ -92,6 +91,11 @@ export async function expandLink(
             ],
           ],
         },
+        link_preview_options: {
+          "url": handleExpandedLinkDomain(linkWithNoTrackers),
+          "prefer_large_media": true,
+          "show_above_text": true,
+        }
       }
     );
 
