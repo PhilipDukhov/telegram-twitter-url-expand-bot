@@ -6,7 +6,16 @@ import { LINK_REGEX } from "./helpers/link-regex";
 import { createSettings, getSettings } from "./helpers/api";
 import { expandLink } from "./actions/expand-link";
 import { deleteMessage } from "./actions/delete-message";
-import { isHackerNews, isInstagram, isPosts, isTikTok } from "./helpers/platforms";
+import {
+  isDribbble,
+  isHackerNews,
+  isInstagram,
+  isInstagramShare,
+  isPosts,
+  isReddit,
+  isSpotify,
+  isTikTok,
+} from "./helpers/platforms";
 import { trackEvent } from "./helpers/analytics";
 import { showBotActivity } from "./actions/show-bot-activity";
 import { isBanned } from "./helpers/banned";
@@ -65,10 +74,30 @@ bot.on("message::url", async (ctx: Context) => {
 
       // Track autoexpand event and platform
       const insta = isInstagram(url);
+      const instaShare = isInstagramShare(url);
       const tiktok = isTikTok(url);
       const posts = isPosts(url);
       const hn = isHackerNews(url);
-      const platform = insta ? "instagram" : tiktok ? "tiktok" : posts ? "posts" : hn ? "hackernews" : "twitter";
+      const dribbble = isDribbble(url);
+      const reddit = isReddit(url);
+      const spotify = isSpotify(url);
+      const platform = insta
+        ? "instagram"
+        : instaShare
+        ? "instagram-share"
+        : tiktok
+        ? "tiktok"
+        : posts
+        ? "posts"
+        : hn
+        ? "hackernews"
+        : dribbble
+        ? "dribbble"
+        : reddit
+        ? "reddit"
+        : spotify
+        ? "spotify"
+        : "twitter";
       trackEvent(`expand.auto.${platform}`);
     } else {
       // Save message context to cache then ask to expand

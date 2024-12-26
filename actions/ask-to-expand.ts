@@ -1,5 +1,14 @@
 import { Context } from "grammy";
-import { isInstagram, isTikTok, isPosts, isHackerNews } from "../helpers/platforms";
+import {
+  isInstagram,
+  isTikTok,
+  isPosts,
+  isHackerNews,
+  isDribbble,
+  isBluesky,
+  isReddit,
+  isSpotify,
+} from "../helpers/platforms";
 import { isBanned } from "../helpers/banned";
 import { askToExpandTemplate } from "../helpers/templates";
 
@@ -22,7 +31,27 @@ export const askToExpand = async (ctx: Context, identifier: string, link: string
   const tiktok = isTikTok(link);
   const posts = isPosts(link);
   const hn = isHackerNews(link);
-  const platform = insta ? "instagram" : tiktok ? "tiktok" : posts ? "posts" : hn ? "hackernews" : "twitter";
+  const dribbble = isDribbble(link);
+  const bluesky = isBluesky(link);
+  const reddit = isReddit(link);
+  const spotify = isSpotify(link);
+  const platform = insta
+    ? "instagram"
+    : tiktok
+    ? "tiktok"
+    : posts
+    ? "posts"
+    : hn
+    ? "hackernews"
+    : dribbble
+    ? "dribbble"
+    : bluesky
+    ? "bluesky"
+    : reddit
+    ? "reddit"
+    : spotify
+    ? "spotify"
+    : "twitter";
 
   try {
     const originalReplyId = ctx.update?.message?.reply_to_message?.message_id;

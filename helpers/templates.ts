@@ -3,7 +3,22 @@
 //! to display properly in Telegram
 
 import { Context } from "grammy";
-import { isHackerNews, isInstagram, isPosts, isTikTok } from "./platforms";
+import {
+  isBluesky,
+  isDribbble,
+  isHackerNews,
+  isInstagram,
+  isPosts,
+  isReddit,
+  isSpotify,
+  isSpotifyTrack,
+  isSpotifyAlbum,
+  isSpotifyPlaylist,
+  isSpotifyArtist,
+  isSpotifyEpisode,
+  isSpotifyShow,
+  isTikTok,
+} from "./platforms";
 import { getHackerNewsMetadata } from "./hacker-news-metadata";
 import { notifyAdmin } from "./notifier";
 
@@ -18,7 +33,9 @@ export const missingPermissionToDeleteMessageTemplate = `🔐 An admin of this c
 export const autoexpandSettingsTemplate = (enabled: boolean) => {
   return `Autoexpand is ${enabled ? "✅ *ON*" : "❌ *OFF*"} for this chat\\. 
   
-I will ${enabled ? "expand" : "reply to"} Twitter, Instagram, TikTok, Hacker News, and Posts․cv links\\.
+I will ${
+    enabled ? "expand" : "reply to"
+  } Twitter, Instagram, Bluesky, TikTok, Reddit, Hacker News, Dribbble, and Posts․cv links\\.
       
 ${
   enabled
@@ -64,6 +81,10 @@ export const askToExpandTemplate = (link: string) => {
   const tiktok = isTikTok(link);
   const posts = isPosts(link);
   const hn = isHackerNews(link);
+  const dribbble = isDribbble(link);
+  const bluesky = isBluesky(link);
+  const reddit = isReddit(link);
+  const spotify = isSpotify(link);
 
   if (insta) {
     return `Expand this Instagram post?`;
@@ -79,6 +100,51 @@ export const askToExpandTemplate = (link: string) => {
 
   if (hn) {
     return `Expand this Hacker News post?`;
+  }
+
+  if (dribbble) {
+    return `Expand this Dribbble shot?`;
+  }
+
+  if (bluesky) {
+    return `Expand this Bluesky post?`;
+  }
+
+  if (reddit) {
+    return `Expand this Reddit post?`;
+  }
+
+  if (spotify) {
+    const track = isSpotifyTrack(link);
+    const album = isSpotifyAlbum(link);
+    const playlist = isSpotifyPlaylist(link);
+    const artist = isSpotifyArtist(link);
+    const episode = isSpotifyEpisode(link);
+    const show = isSpotifyShow(link);
+
+    if (track) {
+      return `Expand this Spotify track?`;
+    }
+
+    if (album) {
+      return `Expand this Spotify album?`;
+    }
+
+    if (playlist) {
+      return `Expand this Spotify playlist?`;
+    }
+
+    if (artist) {
+      return `Expand this Spotify artist?`;
+    }
+
+    if (episode) {
+      return `Expand this Spotify episode?`;
+    }
+
+    if (show) {
+      return `Expand this Spotify show?`;
+    }
   }
 
   return `Expand this Tweet?`;
