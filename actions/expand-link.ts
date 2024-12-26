@@ -68,11 +68,10 @@ export async function expandLink(
 ) {
   if (!ctx || !ctx.chat?.id) return;
   // Return correct link based on platform
-  const expandedLink = handleExpandedLinkDomain(link);
-  let linkWithNoTrackers = expandedLink;
+  let linkWithNoTrackers = link;
   // Strip trackers from these platforms but not others.
   if (isTweet(link) || isInstagram(link) || isTikTok(link) || isSpotify(link)) {
-    linkWithNoTrackers = expandedLink.split("?")[0];
+    linkWithNoTrackers = link.split("?")[0];
   }
 
   try {
@@ -84,9 +83,14 @@ export async function expandLink(
     const sameId = replyTo === topicId;
     const threadOptions = replyId ? { message_thread_id: topicId } : null;
     const threadId = sameId ? null : threadOptions;
-    const replyOptions = {
+    let replyOptions = {
       reply_to_message_id: replyTo,
       ...threadId,
+      link_preview_options: {
+        "url": handleExpandedLinkDomain(linkWithNoTrackers),
+        "prefer_large_media": true,
+        "show_above_text": true,
+      }
     };
 
     let botReply: any;
@@ -187,19 +191,15 @@ export async function expandLink(
           const resolvedUrl = await resolveInstagramShare(link);
           if (resolvedUrl) {
             // Replace the share URL with the resolved URL and convert to ddinstagram.com
-            const finalUrl = resolvedUrl.replace(/instagram\.com/g, "ddinstagram.com");
-            linkWithNoTrackers = finalUrl; // Update the link used in the template
-            link = finalUrl;
+            linkWithNoTrackers = resolvedUrl; // Update the link used in the template
+            replyOptions.link_preview_options.url = handleExpandedLinkDomain(resolvedUrl);
+            link = resolvedUrl;
             let platform: "twitter" | "instagram" | "tiktok" | "instagram-share" | null = null;
             platform = "instagram-share"; // Track as Instagram share
           }
         } catch (error) {
           console.error("[Error] Failed to resolve Instagram share link:", error);
         }
-      }
-      // Handle regular Instagram links (replace domain with ddinstagram.com)
-      else if (isInstagram(link)) {
-        link = link.replace(/instagram\.com/g, "ddinstagram.com");
       }
 
       // Handle Spotify links

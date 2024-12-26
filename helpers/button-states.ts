@@ -30,10 +30,10 @@ export function getButtonState(
       ? "TikTok"
       : "...";
   const baseButtons: InlineKeyboardButton[] = [
-    {
-      text: `🔗 Open on ${platformName}`,
-      url,
-    },
+    // {
+    //   text: `🔗 Open on ${platformName}`,
+    //   url,
+    // },
   ];
 
   // Final state - just show open button
