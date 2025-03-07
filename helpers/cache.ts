@@ -5,12 +5,27 @@ const memoryCache = new NodeCache({
   // Store message Context in memory for a longer duration
   // if necessary, otherwise the button to expand links
   // will not work if the message has expired from cache.
-  stdTTL: 60 * 60 * 12, // 12 hours
+  stdTTL: 60 * 60 * 8, // 8 hours
   // Most of the time, the message will be cached only
   // for a few seconds while the bot is processing it,
   // or when the user is in the process of clicking
   // the button that expands links in the message.
+  checkperiod: 300, // Check for expired keys every 5 minutes
+  maxKeys: 1000, // Max 1000 items in cache
+  deleteOnExpire: true,
 });
+
+// Add cache stats logging every hour
+setInterval(() => {
+  const stats = memoryCache.getStats();
+  console.log("[Cache Stats]", {
+    keys: stats.keys,
+    hits: stats.hits,
+    misses: stats.misses,
+    ksize: stats.ksize,
+    vsize: stats.vsize,
+  });
+}, 60 * 60 * 1000);
 
 /**
  * Cache messages in memory to be able to process them later.
