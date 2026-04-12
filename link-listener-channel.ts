@@ -1,7 +1,7 @@
 import { Context } from "grammy";
 import { bot } from ".";
 import { LINK_REGEX } from "./helpers/link-regex";
-import { isDribbble, isInstagram, isPosts, isReddit, isTikTok, isThreads, isYouTubeShort, isFacebook } from "./helpers/platforms";
+import { isDribbble, isInstagram, isPosts, isReddit, isTikTok, isThreads, isYouTubeShort, isFacebook, INSTAGRAM_DOMAINS } from "./helpers/platforms";
 import { trackEvent } from "./helpers/analytics";
 import { isBanned } from "./helpers/banned";
 
@@ -33,7 +33,7 @@ bot.on("channel_post::url", async (ctx: Context) => {
   const expandedLinksMessage = message
     .replace("twitter.com/", "fxtwitter.com/")
     .replace("x.com/", "fxtwitter.com/")
-    .replace("instagram.com/", "eeinstagram.com/")
+    .replace("instagram.com/", `${INSTAGRAM_DOMAINS[0]}/`)
     .replace("vt.tiktok.com/", "vm.tfxktok.com/")
     .replace("lite.tiktok.com/", "tfxktok.com/")
     .replace("tiktok.com/", "tfxktok.com/")

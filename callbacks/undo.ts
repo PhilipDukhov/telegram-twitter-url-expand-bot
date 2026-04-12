@@ -48,9 +48,11 @@ export async function handleUndo(ctx: Context) {
         // Determine platform and handle URL replacement
         const hasDomain = (domains: string[]) => domains.some((domain) => messageText.includes(domain));
 
-        if (messageText.includes("eeinstagram.com")) {
+        if (hasDomain(INSTAGRAM_UNDO_DOMAINS)) {
           platform = "instagram";
-          undoText = messageText.replace(/eeinstagram\.com/g, "instagram.com");
+          INSTAGRAM_UNDO_DOMAINS.forEach((domain) => {
+            undoText = undoText.replace(new RegExp(escapeDomain(domain), "g"), "instagram.com");
+          });
         } else if (messageText.includes("fxtwitter.com")) {
           platform = "twitter";
           TWITTER_UNDO_DOMAINS.forEach((domain) => {

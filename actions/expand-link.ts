@@ -47,8 +47,8 @@ function handleExpandedLinkDomain(link: string): string {
 
   switch (true) {
     case isInstagram(link):
-      if (link.includes("eeinstagram.com")) return link;
-      return link.replace("instagram.com", "eeinstagram.com");
+      if (INSTAGRAM_DOMAINS.some((domain) => link.includes(domain))) return link;
+      return link.replace("instagram.com", INSTAGRAM_DOMAINS[0]);
     case isTikTok(link):
       const tiktokDomain = TIKTOK_DOMAINS[0];
       return link
