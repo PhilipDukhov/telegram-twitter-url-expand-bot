@@ -1,4 +1,4 @@
-# Link Expander — Telegram Bot for expanding Twitter, Instagram, TikTok, Spotify, Reddit, Bluesky, Hacker News, and Dribbble links.
+# Link Expander - Telegram Bot for expanding Twitter, Instagram, TikTok, YouTube Shorts, Spotify, Reddit, Threads, Bluesky, Hacker News, Facebook, and Dribbble links.
 
 ![banner-4 1@1x](https://user-images.githubusercontent.com/6843656/214646426-db3bf292-afc4-4729-8e16-64ed687127aa.png)
 
@@ -6,17 +6,28 @@ Some Twitter links stopped expanding inside Telegram which made it extremely ann
 
 ## Supported platforms
 
-- _Twitter / X_ using [fxtwitter.com](https://fxtwitter.com)
-- _Instagram_ using [ddinstagram.com](https://ddinstagram.com) (doesn’t work with Stories or Highlights yet.)
-- _TikTok_ using [tfxktok.com](https://tfxktok.com)
+- _Twitter / X_ using [fxtwitter.com](https://fxtwitter.com) and [vxtwitter.com](https://vxtwitter.com)
+- _Instagram_ using [eeinstagram.com](https://eeinstagram.com), [fxstagram.com](https://fxstagram.com), [uuinstagram.com](https://uuinstagram.com), [vxinstagram.com](https://vxinstagram.com) and [kkinstagram.com](https://kkinstagram.com)
+- _TikTok_ using [tfxktok.com](https://tfxktok.com), [kktiktok.com](https://kktiktok.com), [tiktokez.com](https://tiktokez.com) and [tnktok.com](https://tnktok.com)
 - _Bluesky_ using [fxbsky.app](https://fxbsky.app)
 - _Reddit_ using [rxddit.com](https://rxddit.com)
 - _Hacker News_ using a custom API
 - _Dribbble_ using [dribbbletv.com](https://dribbbletv.com)
 - _Posts.cv_ using [postscv.com](https://postscv.com)
-- _Spotify_ using a custom API
+- _Facebook_ using [facebed.com](https://facebed.com)
+- ~_Spotify_ using a custom API~ (disabled for now)
+- _Threads_ using [threadsez.com](https://threadsez.com)
+- _YouTube Shorts_ using [koutube.com](https://koutube.com)
 
-## ✨🆕✨ Support for Spotify links!
+## ✨🆕✨ Switch between embedding services!
+
+Sometimes specific embedding services (like `ddinstagram` or `tfxktok`) go down or stop working correctly. Now you can easily switch between different providers if the default one fails!
+
+When expanding a link, if the embed doesn't load properly, click the **"🖼 Embed not working?"** button. This will cycle through a list of alternative reliable services for that platform (Instagram, TikTok, or Twitter) until you find one that works.
+
+<img width="500" height="100" alt="Switch service demo" src="https://github.com/user-attachments/assets/fb353352-ed6f-432a-a06c-bf3e7a473a00" />
+
+## Support for Spotify links!
 
 When you send a Spotify link, the bot will reply with a photo of the artwork and info about the track / album / playlist / artist / podcast / show.
 It will also send a sample audio clip in another message.
@@ -67,6 +78,8 @@ https://user-images.githubusercontent.com/6843656/182036672-5b566200-cba4-462d-b
 
 While it is technically possible through the Bot API, I simply do not have the time or desire to snoop on your shit. The only thing I will keep track of is counting anonymous events when buttons are clicked, bot commands are used, a tweet has multiple images (etc.) to monitor stats to see if people are finding this bot useful.
 
+You can check the code and verify that none of the messages are being stored or logged in any way.
+
 <img width="593" alt="image" src="https://user-images.githubusercontent.com/6843656/197364188-850c89fa-1186-4f44-a6b1-be6798c88f6e.png">
 
 # Thanks
@@ -75,7 +88,14 @@ This bot wouldn't be possible without the following people and projects. Huge th
 
 - [@dylanpdx](https://github.com/dylanpdx) for creating [BetterTwitFix](https://github.com/dylanpdx/BetterTwitFix) / [vxtwitter.com](https://vxtwitter.com)
 - [@Wikidepia](https://github.com/Wikidepia) for creating [InstaFix](https://github.com/Wikidepia/InstaFix) / [ddinstagram.com](https://ddinstagram.com)
-- [fxtwitter.com](https://fxtwitter.com) / [FixTweet](https://github.com/FixTweet/FixTweet)
+- [@dangeredwolf](https://github.com/dangeredwolf) for creating [FxEmbed](https://github.com/FixTweet/FixTweet) / [fxtwitter.com](https://fxtwitter.com)
 - [@allanf181](https://github.com/allanf181) for creating [tfxktok.com](https://tfxktok.com)
 - [@fxbsky.app](https://bsky.app/profile/fxbsky.app) for creating [fxbsky.app](https://fxbsky.app)
 - [@MinnDevelopment](https://github.com/MinnDevelopment/fxreddit) for creating [rxddit.com](https://rxddit.com)
+- [Embedez.com](https://embedez.com) for their services: threadsez.com, tiktokez.com, instagramez.com
+- [@iGerman00](https://github.com/iGerman00) for creating [koutube.com](https://koutube.com)
+- [@rdfsx](https://github.com/rdfsx) for hosting [eeinstagram.com](https://eeinstagram.com)
+- [@gigirassy](https://github.com/gigirassy) for hosting [fxstagram.com](https://fxstagram.com)
+- [@Knoppiix](https://github.com/Knoppiix) for hosting [zzinstagram.com](https://zzinstagram.com)
+- [@Lainmode](https://github.com/Lainmode) for creating [vxinstagram.com](https://vxinstagram.com)
+- [facebed.com](https://facebed.com) for hosting [facebed.com](https://facebed.com)

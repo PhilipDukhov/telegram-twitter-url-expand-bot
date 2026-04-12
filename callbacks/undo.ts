@@ -2,6 +2,7 @@ import { Context } from "grammy";
 import { trackEvent } from "../helpers/analytics";
 import { peekFromCache } from "../helpers/cache";
 import { getButtonState } from "../helpers/button-states";
+import { INSTAGRAM_DOMAINS, TIKTOK_DOMAINS, TWITTER_DOMAINS, FACEBOOK_DOMAINS } from "../helpers/platforms";
 
 /**
  * Handle undo button for expanded links
@@ -16,7 +17,7 @@ export async function handleUndo(ctx: Context) {
 
   // Discard malformed messages
   if (!answer || !chatId || !messageId || !data) {
-    console.error("[Error] Missing data in undo callback", { chatId, messageId, data });
+    console.error("[Error] Missing data in undo callback:", { chatId, messageId, data });
     return;
   }
 
@@ -27,30 +28,63 @@ export async function handleUndo(ctx: Context) {
       // Check if message is still in cache (within 35 second window)
       const cached = await peekFromCache(identifier);
       if (cached) {
-        // Get the message text
-        const messageText = answer.message?.text;
+        // Get the message text or caption
+        const messageText = answer.message?.text ?? answer.message?.caption;
         if (!messageText) {
-          console.error("[Error] No message text in undo callback");
+          console.error("[Error] No message text in undo callback.");
           return;
         }
 
-        let platform: "twitter" | "instagram" | "tiktok" | null = null;
+        const escapeDomain = (domain: string) => domain.replace(/\./g, "\\.");
+
+        const TWITTER_UNDO_DOMAINS = [...TWITTER_DOMAINS, "fxtwitter.com", "vxtwitter.com"];
+        const INSTAGRAM_UNDO_DOMAINS = [...INSTAGRAM_DOMAINS];
+        const TIKTOK_UNDO_DOMAINS = [...TIKTOK_DOMAINS];
+        const FACEBOOK_UNDO_DOMAINS = [...FACEBOOK_DOMAINS];
+
+        let platform: "twitter" | "instagram" | "tiktok" | "reddit" | "threads" | "youtube" | "facebook" | null = null;
         let undoText = messageText;
 
         // Determine platform and handle URL replacement
+        const hasDomain = (domains: string[]) => domains.some((domain) => messageText.includes(domain));
+
         if (messageText.includes("eeinstagram.com")) {
           platform = "instagram";
           undoText = messageText.replace(/eeinstagram\.com/g, "instagram.com");
         } else if (messageText.includes("fxtwitter.com")) {
           platform = "twitter";
-          undoText = messageText.replace(/fxtwitter\.com/g, "twitter.com");
-        } else if (messageText.includes("tfxktok.com")) {
+          TWITTER_UNDO_DOMAINS.forEach((domain) => {
+            undoText = undoText.replace(new RegExp(escapeDomain(domain), "g"), "twitter.com");
+          });
+        } else if (hasDomain(TIKTOK_UNDO_DOMAINS)) {
           platform = "tiktok";
-          undoText = messageText.replace(/tfxktok\.com/g, "tiktok.com");
+          TIKTOK_UNDO_DOMAINS.forEach((domain) => {
+            const domainRegex = new RegExp(`(?:vm\\.)?${escapeDomain(domain)}`, "g");
+            undoText = undoText.replace(domainRegex, "tiktok.com");
+          });
+        } else if (messageText.includes("rxddit.com")) {
+          platform = "reddit";
+          undoText = messageText.replace(/rxddit\.com/g, "reddit.com");
+        } else if (messageText.includes("threadsez.com")) {
+          platform = "threads";
+          undoText = messageText.replace(/threadsez\.com/g, "threads.com");
+        } else if (messageText.includes("koutube.com/shorts/")) {
+          platform = "youtube";
+          undoText = messageText.replace(/koutube\.com\/shorts\//g, "youtube.com/shorts/");
+        } else if (hasDomain(FACEBOOK_UNDO_DOMAINS)) {
+          platform = "facebook";
+          FACEBOOK_UNDO_DOMAINS.forEach((domain) => {
+            undoText = undoText.replace(new RegExp(escapeDomain(domain), "g"), "facebook.com");
+          });
         } else if (
           messageText.includes("instagram.com") ||
           messageText.includes("twitter.com") ||
-          messageText.includes("tiktok.com")
+          messageText.includes("tiktok.com") ||
+          messageText.includes("reddit.com") ||
+          messageText.includes("threads.com") ||
+          messageText.includes("threads.net") ||
+          messageText.includes("youtube.com/shorts/") ||
+          messageText.includes("facebook.com")
         ) {
           // The message already contains original URLs - it was already undone
           await ctx.answerCallbackQuery({
@@ -74,7 +108,7 @@ export async function handleUndo(ctx: Context) {
           await ctx.api.editMessageText(chatId, messageId, undoText, {
             parse_mode: "HTML",
             reply_markup: {
-              inline_keyboard: getButtonState(platform, 15, ctx.from?.id || 0, url).buttons,
+              inline_keyboard: getButtonState(platform as any, 15, ctx.from?.id || 0, url).buttons,
             },
           });
         } catch (editError) {
@@ -83,14 +117,7 @@ export async function handleUndo(ctx: Context) {
           if (error.message.includes("message to edit not found")) {
             console.warn("[Warning] Cannot update buttons. Message was probably deleted.");
           } else {
-            console.error("[Error] Failed to edit message:", {
-              error: error.message,
-              parameters: {
-                chatId,
-                messageId,
-                undoText,
-              },
-            });
+            console.error("[Error] Failed to edit message:", { error: error.message, chatId, messageId });
           }
         }
 
@@ -104,7 +131,7 @@ export async function handleUndo(ctx: Context) {
         });
       }
     } catch (error) {
-      console.error("[Error] Cannot process undo", error);
+      console.error("[Error] Cannot process undo.", error);
     }
   }
 

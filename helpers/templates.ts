@@ -18,9 +18,14 @@ import {
   isSpotifyEpisode,
   isSpotifyShow,
   isTikTok,
+  isThreads,
+  isYouTubeShort,
+  isFacebook,
 } from "./platforms";
 import { getHackerNewsMetadata } from "./hacker-news-metadata";
 import { notifyAdmin } from "./notifier";
+import { logger } from "./logger";
+import { sanitizeHtmlForTelegram, escapeHtml, escapeHtmlSafe, truncateHtml } from "./sanitize-html";
 
 export const hasPermissionToDeleteMessageTemplate = `✅ I have permissions to automatically delete original messages when expanding links.`;
 export const missingPermissionToDeleteMessageTemplate = `🔐 An admin of this chat needs to give me permissions to automatically delete messages when expanding links.`;
@@ -85,6 +90,9 @@ export const askToExpandTemplate = (link: string) => {
   const bluesky = isBluesky(link);
   const reddit = isReddit(link);
   const spotify = isSpotify(link);
+  const threads = isThreads(link);
+  const ytShort = isYouTubeShort(link);
+  const fb = isFacebook(link);
 
   if (insta) {
     return `Expand this Instagram post?`;
@@ -112,6 +120,10 @@ export const askToExpandTemplate = (link: string) => {
 
   if (reddit) {
     return `Expand this Reddit post?`;
+  }
+
+  if (fb) {
+    return `Expand this Facebook post?`;
   }
 
   if (spotify) {
@@ -147,6 +159,14 @@ export const askToExpandTemplate = (link: string) => {
     }
   }
 
+  if (threads) {
+    return `Expand this Threads post?`;
+  }
+
+  if (ytShort) {
+    return `Expand this YouTube Short?`;
+  }
+
   return `Expand this Tweet?`;
 };
 
@@ -162,7 +182,7 @@ export const expandedMessageTemplate = async (
   lastName?: string,
   text?: string,
   link?: string
-) => {
+): Promise<string> => {
   // TODO: this function is a clusterfuck of ugly template literals. refactor in the future.
   const bothNames = firstName && lastName;
   const nameTemplate = bothNames ? `${firstName} ${lastName}` : firstName ?? lastName;
@@ -176,30 +196,34 @@ export const expandedMessageTemplate = async (
     try {
       const hnPostId = link?.split("id=")[1];
       const metadata = await getHackerNewsMetadata(hnPostId);
-      const { title, user, time_ago, comments_count, url } = metadata.post;
+      if (metadata?.post) {
+        const { title, user, time_ago, comments_count, url, content } = metadata.post;
+        const sanitized = content ? sanitizeHtmlForTelegram(content) : "";
+        const { html: truncated, isPlainText } = truncateHtml(sanitized, 3072);
+        const body = truncated !== "" ? `\n${isPlainText ? escapeHtml(truncated) : truncated}\n` : "";
 
-      includedLink = `<b>${title ? title : "Comment"}</b>
-${comments_count} replies | ${time_ago} by ${user}
-${link}
-
-${url ? url : ""}`;
+        const timeAgoText = time_ago ? `${escapeHtmlSafe(time_ago)} ` : "";
+        includedLink = `<b>${title ? escapeHtmlSafe(title) : "Comment"}</b>
+${comments_count ?? 0} replies | ${timeAgoText}by ${user ? escapeHtmlSafe(user) : "unknown"}
+${escapeHtml(link)}
+${body}
+${url ? escapeHtmlSafe(url) : ""}`;
+      }
     } catch (error) {
-      console.error(error);
+      logger.error("Error fetching HN metadata for template: {error}", { error });
       notifyAdmin(error);
     }
   }
 
+  // Cast msg to any to avoid TypeScript errors with forward properties
+  const msg = ctx.msg as any;
+
   // Check if the original author of the message has a public profile.
-  // @ts-expect-error forward_from is not defined for Message type
-  if (ctx.msg?.forward_from) {
-    // @ts-expect-error forward_from is not defined for Message type
-    const forwardUserId = ctx.msg?.forward_from?.id;
-    // @ts-expect-error forward_from is not defined for Message type
-    const forwardUsername = ctx.msg?.forward_from?.username;
-    // @ts-expect-error forward_from is not defined for Message type
-    const forwardFirstName = ctx.msg?.forward_from?.first_name;
-    // @ts-expect-error forward_from is not defined for Message type
-    const forwardLastName = ctx.msg?.forward_from?.last_name;
+  if (msg?.forward_from) {
+    const forwardUserId = msg.forward_from.id;
+    const forwardUsername = msg.forward_from.username;
+    const forwardFirstName = msg.forward_from.first_name;
+    const forwardLastName = msg.forward_from.last_name;
     const bothNames = forwardFirstName && forwardLastName;
     const nameTemplate = bothNames ? `${forwardFirstName} ${forwardLastName}` : forwardFirstName ?? forwardLastName;
 
@@ -219,22 +243,17 @@ ${includedLink}`;
   }
 
   // Check if the original author of the message has a private profile.
-  // @ts-expect-error forward_sender_name is not defined for Message type
-  if (ctx.msg?.forward_sender_name) {
-    // @ts-expect-error forward_sender_name is not defined for Message type
-    return `<u>Forwarded from <i>${ctx.msg?.forward_sender_name}</i> by ${usernameOrFullNameTag}</u>   
+  if (msg?.forward_sender_name) {
+    return `<u>Forwarded from <i>${msg.forward_sender_name}</i> by ${usernameOrFullNameTag}</u>   
 ${text}
 
 ${includedLink}`;
   }
 
   // Check if the original author of the message is a channel.
-  // @ts-expect-error forward_from_chat is not defined for Message type
-  if (ctx.msg?.forward_from_chat) {
-    // @ts-ignore
-    const forwardName = ctx.msg?.forward_from_chat?.title;
-    // @ts-ignore
-    const forwardUsername = ctx.msg?.forward_from_chat?.username;
+  if (msg?.forward_from_chat) {
+    const forwardName = msg.forward_from_chat.title;
+    const forwardUsername = msg.forward_from_chat.username;
 
     // Link to the original channel by username if they have one.
     if (forwardUsername) {
@@ -256,3 +275,69 @@ ${includedLink}`;
 
 ${includedLink}`;
 };
+
+/**
+ * Safely send a reply message, handling the case where the message thread doesn't exist
+ * by retrying without the thread ID
+ */
+export async function safeReply(
+  ctx: any,
+  message: string,
+  options: { message_thread_id?: number; [key: string]: any } = {}
+): Promise<void> {
+  try {
+    await ctx.reply(message, options);
+  } catch (error: any) {
+    // If thread doesn't exist, retry without thread ID
+    if (error.description?.includes("message thread not found")) {
+      const { message_thread_id, ...optionsWithoutThread } = options;
+      await ctx.reply(message, optionsWithoutThread);
+    } else {
+      throw error; // Re-throw other errors
+    }
+  }
+}
+
+/**
+ * Safely send a message via bot.api.sendMessage, handling the case where the message thread doesn't exist
+ * by retrying without the thread ID
+ */
+export async function safeSendMessage(
+  api: any,
+  chatId: number,
+  message: string,
+  options: { message_thread_id?: number; [key: string]: any } = {}
+): Promise<any> {
+  try {
+    return await api.sendMessage(chatId, message, options);
+  } catch (error: any) {
+    // If thread doesn't exist, retry without thread ID
+    if (error.description?.includes("message thread not found")) {
+      const { message_thread_id, ...optionsWithoutThread } = options;
+      return await api.sendMessage(chatId, message, optionsWithoutThread);
+    } else {
+      throw error; // Re-throw other errors
+    }
+  }
+}
+
+/**
+ * Safely call any API method that accepts message_thread_id, handling the case where the message thread doesn't exist
+ * by retrying without the thread ID
+ */
+export async function safeApiCall<T>(
+  apiMethod: (options: any) => Promise<T>,
+  options: { message_thread_id?: number; [key: string]: any } = {}
+): Promise<T> {
+  try {
+    return await apiMethod(options);
+  } catch (error: any) {
+    // If thread doesn't exist, retry without thread ID
+    if (error.description?.includes("message thread not found")) {
+      const { message_thread_id, ...optionsWithoutThread } = options;
+      return await apiMethod(optionsWithoutThread);
+    } else {
+      throw error; // Re-throw other errors
+    }
+  }
+}

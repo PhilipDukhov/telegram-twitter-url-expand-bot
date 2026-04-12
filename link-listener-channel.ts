@@ -1,7 +1,7 @@
 import { Context } from "grammy";
 import { bot } from ".";
 import { LINK_REGEX } from "./helpers/link-regex";
-import { isDribbble, isInstagram, isPosts, isReddit, isTikTok } from "./helpers/platforms";
+import { isDribbble, isInstagram, isPosts, isReddit, isTikTok, isThreads, isYouTubeShort, isFacebook } from "./helpers/platforms";
 import { trackEvent } from "./helpers/analytics";
 import { isBanned } from "./helpers/banned";
 
@@ -23,16 +23,27 @@ bot.on("channel_post::url", async (ctx: Context) => {
     ? "dribbble"
     : isReddit(message)
     ? "reddit"
+    : isThreads(message)
+    ? "threads"
+    : isYouTubeShort(message)
+    ? "youtube"
+    : isFacebook(message)
+    ? "facebook"
     : "twitter";
   const expandedLinksMessage = message
     .replace("twitter.com/", "fxtwitter.com/")
     .replace("x.com/", "fxtwitter.com/")
     .replace("instagram.com/", "eeinstagram.com/")
+    .replace("vt.tiktok.com/", "vm.tfxktok.com/")
     .replace("lite.tiktok.com/", "tfxktok.com/")
     .replace("tiktok.com/", "tfxktok.com/")
     .replace("posts.cv/", "postscv.com/")
     .replace("dribbble.com/", "dribbbletv.com/")
-    .replace("reddit.com/", "rxddit.com/");
+    .replace("reddit.com/", "rxddit.com/")
+    .replace("threads.com/", "threadsez.com/")
+    .replace("threads.net/", "threadsez.com/")
+    .replace("youtube.com/shorts/", "koutube.com/shorts/")
+    .replace("facebook.com/", "facebed.com/");
 
   try {
     if (caption) {
@@ -41,13 +52,13 @@ bot.on("channel_post::url", async (ctx: Context) => {
           caption: expandedLinksMessage,
         })
         .catch(() => {
-          console.error("[Error1] Channel message cannot be edited.");
+          console.error("[Error] Channel caption cannot be edited.");
           return;
         });
       trackEvent(`edit.channel.caption`);
     } else {
       await ctx.editMessageText(expandedLinksMessage).catch(() => {
-        console.error("[Error2] Channel message cannot be edited.");
+        console.error("[Error] Channel message text cannot be edited.");
         return;
       });
       trackEvent(`edit.channel.message`);
@@ -55,7 +66,7 @@ bot.on("channel_post::url", async (ctx: Context) => {
 
     trackEvent(`expand.channel.${platform}`);
   } catch (error) {
-    console.error("[Error] Channel message cannot be edited.");
+    console.error("[Error] Channel message cannot be edited.", error);
     return;
   }
 });

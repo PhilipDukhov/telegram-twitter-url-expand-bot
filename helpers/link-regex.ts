@@ -21,10 +21,12 @@
     - https://tiktok.com/@username/video/video_id
     - https://www.tiktok.com/t/video_id
     - https://vm.tiktok.com/video_id
+    - https://vt.tiktok.com/video_id
     - https://id.tiktok.com/video_id
     - https://en.tiktok.com/video_id
     - https://mobile.tiktok.com/@username/video/video_id
     - https://lite.tiktok.com/@username/video/video_id
+    - Any subdomain.tiktok.com URLs
 
    * Posts.cv URLs, in the format:
     - https://posts.cv/username/post_id
@@ -46,14 +48,26 @@
     - https://reddit.com/r/:subreddit/s/:id
     - https://reddit.com/:id
 
-    * Spotify URLs, in the format:
-    - https://open.spotify.com/track/track_id
-    - https://open.spotify.com/album/album_id
-    - https://open.spotify.com/playlist/playlist_id
-    - https://open.spotify.com/artist/artist_id
-    - https://open.spotify.com/episode/episode_id
-    - https://open.spotify.com/show/show_id
+    * Threads URLs, in the format:
+    - https://threads.com/@username/post/post_id
+    - https://www.threads.com/@username/post/post_id
+    - https://threads.net/@username/post/post_id
+    - https://www.threads.net/@username/post/post_id
+
+    * YouTube Shorts URLs, in the format:
+    - https://youtube.com/shorts/video_id
+
+    * Facebook URLs (including m.facebook.com), strictly:
+    - /:username/posts/:hash
+    - /:username/videos/:id
+    - /share/r/:hash, /share/p/:hash, /share/v/:hash
+    - /reel/:id
+    - /photo?fbid=... (but not photo.php)
+    - /watch?v=...
+    - /story.php
+    - /permalink.php
+    - /groups/:id/posts/:hash, /groups/:id/permalink/:hash, /groups/:id?multi_permalinks=...
 
  */
 export const LINK_REGEX: RegExp =
-  /https?:\/\/(?:www\.)?(?:mobile\.)?(?:(?:twitter|x)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)(?:\?.*)?|instagram\.com\/(?:p|reel|reels|share|stories\/[^\/]+)\/([A-Za-z0-9-_]+)(?:\?.*)?|(?:lite\.|www\.|)?tiktok\.com\/(?:@|v\/)?(\w+)\/(video\/)?(\d+)(?:\?.*)?|(?:vm\.|id\.|en\.|lite\.)tiktok\.com\/([A-Za-z0-9-_]+)(?:\?.*)?|www\.tiktok\.com\/(@[\w.-]+\/video\/\d+|v\/\d+|t\/\w+)(?:\?.*)?|posts\.cv\/([A-Za-z0-9_]+)\/([A-Za-z0-9]+)(?:\?.*)?|news\.ycombinator\.com\/item\?id=\d+(?:\?.*)?|dribbble\.com\/shots\/([A-Za-z0-9-_]+)(?:\?.*)?|bsky\.app\/([A-Za-z0-9_]+)\/([A-Za-z0-9]+)(?:\?.*)?|bsky\.app\/profile\/([A-Za-z0-9_]+)\/post\/([A-Za-z0-9]+)(?:\?.*)?|reddit\.com\/(?:r\/[^\/]+\/(?:comments|s)\/[A-Za-z0-9]+(?:\/[^\/]*)?(?:\/[^\/]*)?|[A-Za-z0-9]+)(?:\?.*)?|open\.spotify\.com\/(?:track|album|playlist|episode|show|artist)\/([A-Za-z0-9]+)(?:\?.*)?)/im;
+  /https?:\/\/(?:www\.)?(?:mobile\.)?(?:(?:twitter|x)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)(?:\?.*)?|instagram\.com\/(?:p|reel|reels|share|stories\/[^\/]+)\/([A-Za-z0-9-_]+)(?:\?.*)?|(?:[a-z0-9-]+\.)?tiktok\.com\/(?:@[\w.-]+\/video\/\d+|v\/\d+|t\/\w+|[A-Za-z0-9-_]+)(?:\?.*)?|posts\.cv\/([A-Za-z0-9_]+)\/([A-Za-z0-9]+)(?:\?.*)?|news\.ycombinator\.com\/item\?id=\d+(?:\?.*)?|dribbble\.com\/shots\/([A-Za-z0-9-_]+)(?:\?.*)?|bsky\.app\/([A-Za-z0-9_]+)\/([A-Za-z0-9]+)(?:\?.*)?|bsky\.app\/profile\/([A-Za-z0-9_]+)\/post\/([A-Za-z0-9]+)(?:\?.*)?|reddit\.com\/(?:r\/[^\/]+\/(?:comments|s)\/[A-Za-z0-9]+(?:\/[^\/]*)?(?:\/[^\/]*)?|[A-Za-z0-9]+)(?:\?.*)?|threads\.(?:com|net)\/@[A-Za-z0-9_.]+\/post\/[A-Za-z0-9]+(?:\?.*)?|youtube\.com\/shorts\/([A-Za-z0-9_-]+)(?:\?.*)?|(?:m\.)?facebook\.com\/(?:[^\/]+\/(?:posts|videos)\/|groups\/[^\/]+\/(?:posts\/|permalink\/|\?.*multi_permalinks)|share\/(?:r|p|v)\/|reel\/|photo\/?\?|watch|story\.php|permalink\.php))/im;

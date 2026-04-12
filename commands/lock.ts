@@ -2,12 +2,13 @@ import { bot } from "..";
 import { showBotActivity } from "../actions/show-bot-activity";
 import { createSettings, getSettings } from "../helpers/api";
 import { notifyAdmin } from "../helpers/notifier";
-import { lockSettingsTemplate } from "../helpers/templates";
+import { lockSettingsTemplate, safeSendMessage } from "../helpers/templates";
 import { deleteMessage } from "../actions/delete-message";
 import { Context } from "grammy";
 import { trackEvent } from "../helpers/analytics";
 import { isBanned } from "../helpers/banned";
 import { checkAdminStatus } from "../helpers/admin";
+import { logger } from "../helpers/logger";
 
 /**
  * Manage locking settings
@@ -22,17 +23,23 @@ bot.command("lock", async (ctx: Context) => {
   if (!msgId || !chatId) return;
   if (isBanned(chatId)) return;
 
-  const [settings, isAdmin] = await Promise.all([getSettings(chatId), checkAdminStatus(ctx)]);
+  let settings, isAdmin;
+  try {
+    [settings, isAdmin] = await Promise.all([getSettings(chatId), checkAdminStatus(ctx)]);
+  } catch (error) {
+    logger.error("Error getting settings: {error}", { error });
+    return;
+  }
   if (!isAdmin && settings?.settings_lock) {
-    return await bot.api
-      .sendMessage(chatId, "You need to be an admin to use the Lock command.", {
+    try {
+      return await safeSendMessage(bot.api, chatId, "You need to be an admin to use the Lock command.", {
         message_thread_id: topicId ?? undefined,
         disable_notification: true,
-      })
-      .catch(() => {
-        console.error(`[Error] [lock.ts:35] Failed to send message.`);
-        return;
       });
+    } catch (error) {
+      logger.error("Failed to send lock admin message: {error}", { error });
+      return;
+    }
   }
 
   try {
@@ -40,9 +47,9 @@ bot.command("lock", async (ctx: Context) => {
 
     if (settings) {
       deleteMessage(chatId, msgId);
-      // Reply with template and buttons to control changelog settings
-      await bot.api
-        .sendMessage(chatId, lockSettingsTemplate(settings.settings_lock), {
+      // Reply with template and buttons to control lock settings
+      try {
+        await safeSendMessage(bot.api, chatId, lockSettingsTemplate(settings.settings_lock), {
           message_thread_id: topicId ?? undefined,
           parse_mode: "MarkdownV2",
           disable_notification: true,
@@ -60,18 +67,22 @@ bot.command("lock", async (ctx: Context) => {
               ],
             ],
           },
-        })
-        .catch(() => {
-          console.error(`[Error] [changelog.ts:51] Failed to send settings_lock template.`);
-          return;
         });
+      } catch (error) {
+        logger.error("Failed to send lock settings message: {error}", { error });
+        return;
+      }
     } else {
       deleteMessage(chatId, msgId);
       // Create default settings for this chat
-      createSettings(chatId, false, true, false);
+      try {
+        await createSettings(chatId, false, true, false);
+      } catch (error) {
+        logger.error("Error creating settings: {error}", { error });
+      }
       // Reply with template and buttons to control settings_lock (default: off)
-      await ctx.api
-        .sendMessage(chatId, lockSettingsTemplate(true), {
+      try {
+        await safeSendMessage(ctx.api, chatId, lockSettingsTemplate(true), {
           message_thread_id: topicId ?? undefined,
           parse_mode: "MarkdownV2",
           disable_notification: true,
@@ -89,15 +100,19 @@ bot.command("lock", async (ctx: Context) => {
               ],
             ],
           },
-        })
-        .catch(() => {
-          console.error(`[Error] [changelog.ts:79] Failed to send changelog settings template.`);
-          return;
         });
+      } catch (error) {
+        logger.error("Failed to send default lock settings message: {error}", { error });
+        return;
+      }
     }
-  } catch (error: any) {
-    console.error(error);
-    notifyAdmin(error);
+  } catch (error) {
+    logger.error("Failed to process lock command: {error}", { error });
+
+    // @ts-ignore
+    if (error.description.includes("was blocked")) {
+      notifyAdmin(chatId);
+    }
     return;
   }
 

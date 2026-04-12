@@ -15,6 +15,9 @@ import {
   isReddit,
   isSpotify,
   isTikTok,
+  isThreads,
+  isYouTubeShort,
+  isFacebook,
 } from "./helpers/platforms";
 import { trackEvent } from "./helpers/analytics";
 import { showBotActivity } from "./actions/show-bot-activity";
@@ -41,12 +44,22 @@ bot.on("message::url", async (ctx: Context) => {
   const message = ctx.msg?.text ?? ctx.msg?.caption ?? ""; // text or caption
 
   // Get autoexpand settings for this chat
-  const settings = await getSettings(chatId);
-  const autoexpand = settings?.autoexpand;
+  let settings;
+  let autoexpand: boolean;
 
-  // Create default settings for this chat if they don’t exist
-  if (!settings) {
-    await createSettings(chatId, false, true, false);
+  try {
+    settings = await getSettings(chatId);
+    autoexpand = settings?.autoexpand ?? false;
+
+    // Create default settings for this chat if they don't exist
+    if (!settings) {
+      await createSettings(chatId, false, true, false);
+    }
+  } catch (error) {
+    const { logger } = await import("./helpers/logger");
+    logger.error("Error handling settings: {error}", { error });
+    // Default to manual expand if settings fail
+    autoexpand = false;
   }
 
   // Loop through all links in message
@@ -82,6 +95,9 @@ bot.on("message::url", async (ctx: Context) => {
       const dribbble = isDribbble(url);
       const reddit = isReddit(url);
       const spotify = isSpotify(url);
+      const threads = isThreads(url);
+      const youtube = isYouTubeShort(url);
+      const fb = isFacebook(url);
       const platform = insta
         ? "instagram"
         : instaShare
@@ -98,6 +114,12 @@ bot.on("message::url", async (ctx: Context) => {
         ? "reddit"
         : spotify
         ? "spotify"
+        : threads
+        ? "threads"
+        : youtube
+        ? "youtube"
+        : fb
+        ? "facebook"
         : "twitter";
       trackEvent(`expand.auto.${platform}`);
     } else {

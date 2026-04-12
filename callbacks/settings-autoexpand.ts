@@ -5,6 +5,7 @@ import { autoexpandSettingsTemplate } from "../helpers/templates";
 import { deleteMessage } from "../actions/delete-message";
 import { handleMissingPermissions } from "../actions/missing-permissions";
 import { checkAdminStatus } from "../helpers/admin";
+import { logger } from "../helpers/logger";
 
 const FIELD_NAME = "autoexpand";
 
@@ -22,17 +23,26 @@ export async function handleAutoexpandSettings(ctx: Context) {
   // Discard malformed messages
   if (!answer || !chatId || !messageId || !data) return;
 
-  const [settings, isAdmin] = await Promise.all([getSettings(chatId), checkAdminStatus(ctx)]);
+  // Only process autoexpand callbacks
+  if (!data.includes("autoexpand:")) return;
+
+  let settings, isAdmin;
+  try {
+    [settings, isAdmin] = await Promise.all([getSettings(chatId), checkAdminStatus(ctx)]);
+  } catch (error) {
+    logger.error("Error getting settings: {error}", { error });
+    return;
+  }
   if (!isAdmin && settings?.settings_lock) {
     // return await ctx.reply("You need to be an admin to change Autoexpand settings.").catch(() => {
-    console.error(`[Error] [settings-autoexpand.ts:28] Failed to send message.`);
+    logger.error("Non-admin tried to change locked autoexpand settings");
     return;
     // });
   }
 
   if (data.includes("autoexpand:done")) {
     await ctx.answerCallbackQuery().catch(() => {
-      console.error(`[Error] Cannot answer callback query.`);
+      logger.error("Cannot answer autoexpand done callback query");
       return;
     });
     deleteMessage(chatId, messageId);
@@ -40,9 +50,13 @@ export async function handleAutoexpandSettings(ctx: Context) {
   }
 
   if (data.includes("autoexpand:off")) {
-    updateSettings(chatId, FIELD_NAME, false);
+    try {
+      await updateSettings(chatId, FIELD_NAME, false);
+    } catch (error) {
+      logger.error("Error updating autoexpand settings: {error}", { error });
+    }
     await ctx.answerCallbackQuery().catch(() => {
-      console.error(`[Error] Cannot answer callback query.`);
+      logger.error("Cannot answer autoexpand off callback query");
       return;
     });
     await ctx.api
@@ -64,7 +78,7 @@ export async function handleAutoexpandSettings(ctx: Context) {
         },
       })
       .catch(() => {
-        console.error(`[Error1]`);
+        logger.error("Cannot edit autoexpand off message");
         return;
       });
 
@@ -73,9 +87,13 @@ export async function handleAutoexpandSettings(ctx: Context) {
   }
 
   if (data.includes("autoexpand:on")) {
-    updateSettings(chatId, FIELD_NAME, true);
+    try {
+      await updateSettings(chatId, FIELD_NAME, true);
+    } catch (error) {
+      logger.error("Error updating autoexpand settings: {error}", { error });
+    }
     await ctx.answerCallbackQuery().catch(() => {
-      console.error(`[Error] Cannot answer callback query.`);
+      logger.error("Cannot answer autoexpand on callback query");
       return;
     });
     await ctx.api
@@ -97,7 +115,7 @@ export async function handleAutoexpandSettings(ctx: Context) {
         },
       })
       .catch(() => {
-        console.error(`[Error] Cannot edit settings.`);
+        logger.error("Cannot edit autoexpand on message");
         return;
       });
 

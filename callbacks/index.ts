@@ -8,7 +8,9 @@ import { handleLockSettings } from "./settings-lock";
 import { handleChangelogSettings } from "./settings-changelog";
 import { handlePermissionsSettings } from "./settings-permissions";
 import { handleUndo } from "./undo";
+import { handleSwitchService } from "./switch-service";
 import { isBanned } from "../helpers/banned";
+import { logger } from "../helpers/logger";
 
 // Multiple bot.on("callback_query") functions cannot run in parallel.
 // The bot will only register the first one and ignore the rest.
@@ -21,15 +23,18 @@ bot.on("callback_query", async (ctx: Context) => {
   if (!chatId || !data) return;
   if (isBanned(chatId)) return;
 
-  // Save chat member count to database
-  getMemberCount(chatId);
-
   // Handle expand callbacks
   await handleManualExpand(ctx);
   await handleExpandedLinkDestruction(ctx);
   await handleUndo(ctx);
+  await handleSwitchService(ctx);
   await handleAutoexpandSettings(ctx);
   await handleLockSettings(ctx);
   await handleChangelogSettings(ctx);
   await handlePermissionsSettings(ctx);
+
+  // Save anonymous chat member count to database
+  getMemberCount(chatId).catch(() => {
+    logger.warn("Could not get member count for chat {chatId}", { chatId });
+  });
 });

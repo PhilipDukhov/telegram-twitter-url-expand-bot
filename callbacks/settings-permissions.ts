@@ -2,6 +2,7 @@ import { Context } from "grammy";
 import { deleteMessage } from "../actions/delete-message";
 import { updateSettings } from "../helpers/api";
 import { trackEvent } from "../helpers/analytics";
+import { logger } from "../helpers/logger";
 
 /**
  * Handle button responses to /permissions
@@ -18,7 +19,7 @@ export async function handlePermissionsSettings(ctx: Context) {
 
   if (data.includes("permissions:done")) {
     await ctx.answerCallbackQuery().catch(() => {
-      console.error(`[Error] Cannot answer callback query.`);
+      logger.error("Cannot answer permissions done callback query");
       return;
     });
     deleteMessage(chatId, messageId);
@@ -27,11 +28,15 @@ export async function handlePermissionsSettings(ctx: Context) {
 
   if (data.includes("permissions:disable-warning")) {
     await ctx.answerCallbackQuery().catch(() => {
-      console.error(`[Error] Cannot answer callback query.`);
+      logger.error("Cannot answer permissions disable-warning callback query");
       return;
     });
     deleteMessage(chatId, messageId);
-    updateSettings(chatId, "ignore_permissions_warning", true);
+    try {
+      await updateSettings(chatId, "ignore_permissions_warning", true);
+    } catch (error) {
+      logger.error("Error updating permissions settings: {error}", { error });
+    }
     trackEvent("settings.permissions.disable-warning");
     return;
   }
