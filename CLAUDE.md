@@ -5,7 +5,7 @@ This is a personal fork by Philip Dukhov. Key differences from the original:
 ## Infrastructure
 
 - **Deployment**: fly.io instead of Railway — added `Dockerfile`, `fly.toml`, `.github/workflows/fly-deploy.yml`
-- **Database**: Uses **Xata** (`helpers/xata.ts`) instead of Redis. The original migrated from Xata to Redis (`ioredis`), but this fork retains Xata for chat settings storage.
+- **Database**: Settings are stubbed out in `helpers/api.ts` — all functions return hardcoded `DEFAULT_SETTINGS` (autoexpand always on, changelog on, settings_lock off). Redis (`helpers/redis.ts`) is present but not called. To re-enable, uncomment the Redis lines in `api.ts` and set `REDIS_URL`.
 
 ## Logging
 
